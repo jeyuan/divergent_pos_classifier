@@ -69,7 +69,7 @@ def main():
         #    print "i", i, "pos", pos, "pkp", pkp
         #    print "cov:", "blasr", blasr_cov, "freq", freq_cov, "sam", sam_cov
         
-        freq_fts = [freq_cov, sub_ct, del_ct, ins_ct]
+        freq_fts = [cov, sub_ct, del_ct, ins_ct]
         freq_features[i][0:freq_width] = freq_fts
         kmer_features[i][0:len(norm_pkc)] = norm_pkc
     
@@ -101,6 +101,12 @@ def main():
     print "all positions", all_pos.T.shape
     print "all tentative labels", tent_labels.T.shape
     
+    
+    large_indels = [(0, 2000), (19610, 21050), (21865, 23975), (31860, 33185)]
+    indel_inds = set()
+    for start, end in large_indels:
+        indel_inds = indel_inds.union(set(range(start, end)))
+    
     num_pca_components = 5
     pca = PCA(n_components = num_pca_components)
     pca.fit(kmer_features)
@@ -124,7 +130,8 @@ def main():
     print
     
     scaled_features = scale(all_features)
-    print "scaled features", scaled_features
+    print "scaled features", scaled_features.shape
+    print scaled_features
     for i, f in enumerate(scaled_features[0]):
         print labels[i], sum(scaled_features[:, i])
     print
@@ -178,6 +185,31 @@ def main():
     plt.xlabel('False Positive Rate')
     plt.show()
     
+    
+    fn = []
+    fp = []
+    for pos, pred, true, tent in zip(all_pos, predictions, true_labels, tent_labels):
+        if pred == 1 and true == 0:
+            fp.append(1)
+        else:
+            fp.append(0)
+        if pred == 0 and true == 1:
+            fn.append(1)
+        else:
+            fn.append(0)
+        #if pos in indel_inds:
+        #    print pos, pred, true, tent
+        #if pos in [2000, 21050, 23975, 33185]:
+        #    print
+
+    plt.figure(2)
+    plt.title('classifications vs labels')
+    plt.plot(all_pos, fn, '.g', label = 'False Negatives')
+    plt.plot(all_pos, fp, '.b', label = 'False Positives')
+    plt.ylim(-1, 2)
+    plt.legend()
+    plt.show()
+
     print "Total time:\t{0:.3f} s".format(time.time() - start_time)
 
 def read_pk_output(pk_out_file):
