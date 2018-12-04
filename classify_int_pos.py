@@ -102,11 +102,6 @@ def main():
     print "all tentative labels", tent_labels.T.shape
     
     
-    large_indels = [(0, 2000), (19610, 21050), (21865, 23975), (31860, 33185)]
-    indel_inds = set()
-    for start, end in large_indels:
-        indel_inds = indel_inds.union(set(range(start, end)))
-    
     num_pca_components = 5
     pca = PCA(n_components = num_pca_components)
     pca.fit(kmer_features)
@@ -186,27 +181,35 @@ def main():
     plt.show()
     
     
-    fn = []
-    fp = []
+    pfn = []
+    pfp = []
+    tfn = []
+    tfp = []
     for pos, pred, true, tent in zip(all_pos, predictions, true_labels, tent_labels):
         if pred == 1 and true == 0:
-            fp.append(1)
+            pfp.append(1)
         else:
-            fp.append(0)
+            pfp.append(0)
         if pred == 0 and true == 1:
-            fn.append(1)
+            pfn.append(2)
         else:
-            fn.append(0)
-        #if pos in indel_inds:
-        #    print pos, pred, true, tent
-        #if pos in [2000, 21050, 23975, 33185]:
-        #    print
+            pfn.append(0)
+        if tent == 1 and true == 0:
+            tfp.append(3)
+        else:
+            tfp.append(0)
+        if tent == 0 and true == 1:
+            tfn.append(4)
+        else:
+            tfn.append(0)
 
     plt.figure(2)
-    plt.title('classifications vs labels')
-    plt.plot(all_pos, fn, '.g', label = 'False Negatives')
-    plt.plot(all_pos, fp, '.b', label = 'False Positives')
-    plt.ylim(-1, 2)
+    plt.title('False Calls')
+    plt.plot(all_pos, pfn, '.g', label = 'Prediction False Negatives')
+    plt.plot(all_pos, pfp, '.b', label = 'Prediction False Positives')
+    plt.plot(all_pos, tfn, '.r', label = 'Tentative False Negatives')
+    plt.plot(all_pos, tfp, '.m', label = 'Tentative False Positives')
+    plt.ylim(0, 6)
     plt.legend()
     plt.show()
 
