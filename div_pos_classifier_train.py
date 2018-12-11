@@ -31,7 +31,7 @@ def main():
                  "sim.A.20k.x.15.log_reg_classifier.sav", 
                  "nctc9964.rep_5.sim.A.20k.x.15.joint.classifier.sav"]
     classifier_file = os.path.join(classifier_path, 
-                                   clf_files[0])
+                                   clf_files[2])
     
     nctc_labels = nctc9964_rep5_train(k, freq_width, kmer_width)
     nctc_freq, nctc_kmer, nctc_true = nctc_labels
@@ -41,8 +41,7 @@ def main():
     print "NCTC features", nctc_features.shape
     print "NCTC true labels", nctc_true.shape
     
-    """
-    sim_labels = sim_a_20k_x_15_train(k, freq_width, kmer_width)
+    """sim_labels = sim_a_20k_x_15_train(k, freq_width, kmer_width)
     sim_freq, sim_kmer, sim_true = sim_labels
     sim_features = np.concatenate((sim_freq, sim_kmer), axis = 1)
     print "Sim freq features", sim_freq.shape
@@ -52,6 +51,10 @@ def main():
     
     all_features = nctc_features
     all_true = nctc_true
+    #all_features = np.concatenate((nctc_features, sim_features), axis = 0)
+    #all_true = np.concatenate((nctc_true, sim_true), axis = 0)
+    print "All features", all_features.shape
+    print "All true labels", all_true.shape
     orig_x_train, orig_x_test, y_train, y_test = \
         train_test_split(all_features, all_true, test_size = 0.25, 
                          random_state = 0)
@@ -138,10 +141,19 @@ def nctc9964_rep5_train(k, freq_width, kmer_width):
                                                 freq_width, kmer_width)
     true_labels = get_true_labels(pos_out)
     
+    freq_feat_arr = freq_features
+    kmer_feat_arr = kmer_features
+    true_arr = true_labels
+    
     filtered_arrs = filter_nctc_features(freq_features, kmer_features, 
                                          true_labels)
     freq_feat_arr, kmer_feat_arr, true_arr = filtered_arrs
-    return filtered_arrs
+    
+    #labeled_true_arrs = large_indels_true_nctc_features(freq_features, 
+    #                                                    kmer_features, 
+    #                                                    true_labels)
+    #freq_feat_arr, kmer_feat_arr, true_arr = labeled_true_arrs
+    return freq_feat_arr, kmer_feat_arr, true_arr
 
 def filter_nctc_features(freq_features, kmer_features, true_labels):
     large_indels = [(0, 2000), (19610, 21050), (21865, 23975), (31860, 33185)]
@@ -157,6 +169,21 @@ def filter_nctc_features(freq_features, kmer_features, true_labels):
     true_arr = np.concatenate((true_labels[2000:19610], 
                                true_labels[21050:21865], 
                                true_labels[23975:31860], 
+                               true_labels[33185:]))
+    return freq_feat_arr, kmer_feat_arr, true_arr
+
+def large_indels_true_nctc_features(freq_features, kmer_features, true_labels):
+    large_indels = [(0, 2000), (19610, 21050), (21865, 23975), (31860, 33185)]
+    non_indel_inds = [(2000, 19610), (21050, 21865), (23975, 31860), (33185, )]
+    freq_feat_arr = freq_features
+    kmer_feat_arr = kmer_features
+    true_arr = np.concatenate((np.ones(2000),
+                               true_labels[2000:19610], 
+                               np.ones(21050 - 19610),
+                               true_labels[21050:21865], 
+                               np.ones(23975 - 21865),
+                               true_labels[23975:31860], 
+                               np.ones(33185 - 31860),
                                true_labels[33185:]))
     return freq_feat_arr, kmer_feat_arr, true_arr
 

@@ -205,10 +205,10 @@ def main():
 
     plt.figure(2)
     plt.title('False Calls')
-    plt.plot(all_pos, pfn, '.g', label = 'Prediction False Negatives')
     plt.plot(all_pos, pfp, '.b', label = 'Prediction False Positives')
-    plt.plot(all_pos, tfn, '.r', label = 'Tentative False Negatives')
+    plt.plot(all_pos, pfn, '.g', label = 'Prediction False Negatives')
     plt.plot(all_pos, tfp, '.m', label = 'Tentative False Positives')
+    plt.plot(all_pos, tfn, '.r', label = 'Tentative False Negatives')
     plt.ylim(0, 6)
     plt.legend()
     plt.show()
